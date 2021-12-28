@@ -104,19 +104,19 @@ class GeoLineString:
                 xy = list(inter1.coords)[0]
                 n_xy_intersections = 1
             except:
-                n_xy_intersections = len(inter1)
+                n_xy_intersections = len(inter1.geoms)
 
             try:
                 xz = list(inter2.coords)[0]
                 n_xz_intersections = 1
             except:
-                n_xz_intersections = len(inter2)
+                n_xz_intersections = len(inter2.geoms)
 
             try:
                 yz = list(inter3.coords)[0]
                 n_yz_intersections = 1
             except:
-                n_yz_intersections = len(inter3)
+                n_yz_intersections = len(inter3.geoms)
 
             for i in range(n_xy_intersections):
 
@@ -125,17 +125,17 @@ class GeoLineString:
                     for k in range(n_yz_intersections):
 
                         try:
-                            xy = list(inter1[i].coords)
+                            xy = list(inter1.geoms[i].coords)
                         except:
                             xy = list(inter1.coords)
 
                         try:
-                            xz = list(inter2[j].coords)
+                            xz = list(inter2.geoms[j].coords)
                         except:
                             xz = list(inter2.coords)
 
                         try:
-                            yz = list(inter3[k].coords)
+                            yz = list(inter3.geoms[k].coords)
                         except:
                             yz = list(inter3.coords)
 

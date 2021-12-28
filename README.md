@@ -25,7 +25,7 @@ pip install -e .
 ### Examples
 The core focus of this repository is to make working with 3D geospatial/geographical data easier in python. Therefore, the core element of this repository is the GeoLineString (to start).
 
-1. [GeoLineStrings]()
+1. [GeoLineStrings](https://github.com/marcbrittain/PyGeoShape/blob/main/Examples/Example%20-%20GeoLineStrings.ipynb)
 
 ## Roadmap
 

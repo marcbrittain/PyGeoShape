@@ -3,7 +3,17 @@
 
 ## Getting Started
 ### Installation
-To install the package, first clone the repository to a location of your choosing:
+
+#### pip
+The easiest way to install PyGeoShape is by using pip:
+
+```bash
+pip install pygeoshape
+```
+
+#### source
+
+To install the package from source, first clone the repository to a location of your choosing:
 
 ```bash
 git clone https://github.com/marcbrittain/PyGeoShape.git

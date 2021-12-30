@@ -1,31 +1,50 @@
-from shapely.geometry import LineString, Point
 from typing import List
+from shapely.geometry import LineString
 from pyproj import Transformer
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 class GeoLineString:
-    def __init__(self, coords: List, epsg_proj: str = 'epsg:2163', epsg_from: str = 'epsg:4326', isXY: bool = False):
+    """Base GeoLinString type"""
+
+    def __init__(
+        self,
+        coords: List,
+        epsg_proj: str = "epsg:2163",
+        epsg_from: str = "epsg:4326",
+        is_xy: bool = False,
+    ):
+        """
+        Args:
+        ----
+
+        coords (List): Input coordinates in (longitude, latitude, altitude) or (x, y, z)
+        epsg_proj (str): EPSG code to transform longitude, latitude into x, y (default: 2163)
+        epsg_from (str): EPSG code to transform longitude, latitude from (default: 4326)
+        is_xy (bool): Boolean for if the input coordinates are already in (x, y, [z]) format
+
+        """
         # coords should contain [[lon1, lat1, alt1],[lon2,...]]
         # Units for altitude should be meters
 
         self.coords = coords
         self.epsg_proj = epsg_proj
         self.epsg_from = epsg_from
-        self.isXY = isXY
+        self.is_xy = is_xy
         self.transformer = Transformer.from_crs(
-            self.epsg_from, self.epsg_proj, always_xy=True)
+            self.epsg_from, self.epsg_proj, always_xy=True
+        )
 
         # convert input coordinates to X, Y
-        if not self.isXY:
+        if not self.is_xy:
             self.lonlat_coords = self.coords
             self.xy_coords = self.project_coords()
         else:
             self.xy_coords = self.coords
 
         self.np_coords = np.array(self.xy_coords)
+        self.length = self.geolinestring_length()
         dimensions = len(self.xy_coords[0])
 
         # need linestring for each dimension
@@ -39,15 +58,43 @@ class GeoLineString:
 
         if dimensions == 3:
 
-            self.xy = LineString([(coord[0], coord[1], coord[2])
-                                 for coord in self.xy_coords])
-            self.xz = LineString([(coord[0], coord[2], coord[1])
-                                 for coord in self.xy_coords])
-            self.yz = LineString([(coord[1], coord[2], coord[0])
-                                 for coord in self.xy_coords])
+            self.xy = LineString(
+                [(coord[0], coord[1], coord[2]) for coord in self.xy_coords]
+            )
+            self.xz = LineString(
+                [(coord[0], coord[2], coord[1]) for coord in self.xy_coords]
+            )
+            self.yz = LineString(
+                [(coord[1], coord[2], coord[0]) for coord in self.xy_coords]
+            )
+
+    def geolinestring_length(self):
+        """
+        Determines the length of the GeoLineString in meters
+
+
+        Returns:
+        -------
+        length (float): Length of GeoLineString
+
+        """
+
+        # sqrt( (x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2)
+        # then take sum for each segment for total distance
+        length = np.sum(
+            np.sqrt(np.sum(np.square(np.diff(self.np_coords, axis=0)), axis=1)))
+        return length
 
     def project_coords(self):
+        """
+        Projects the longitude, latitude coordinates to X, Y (meters)
 
+
+        Returns:
+        -------
+        xy_coords (List): List of coordinates in (X, Y, [Z])
+
+        """
         xy_coords = []
         for coordinate in self.coords:
             x, y = self.transformer.transform(coordinate[0], coordinate[1])
@@ -59,21 +106,49 @@ class GeoLineString:
         return xy_coords
 
     def plot(self, geo_obj=None, label_fontsize=12):
+        """
+        Plot the 3D LineString using Matplotlib.
+
+        Args:
+        ----
+        geo_obj (GeoLineString): Second GeoLineString to add to plot (Optional)
+        label_fontsize (int):  Fontsize for the axes labels
+
+
+        Returns:
+        -------
+        fig: Matplotlib figure
+        ax: Matplotlin axes
+
+        """
+
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
         ax.plot(self.np_coords[:, 0],
                 self.np_coords[:, 1], self.np_coords[:, 2])
 
         if geo_obj is not None:
-            ax.plot(geo_obj.np_coords[:, 0],
-                    geo_obj.np_coords[:, 1], geo_obj.np_coords[:, 2])
-        ax.set_xlabel('x', fontsize=label_fontsize)
-        ax.set_ylabel('y', fontsize=label_fontsize)
-        ax.set_zlabel('z', fontsize=label_fontsize)
+            ax.plot(
+                geo_obj.np_coords[:, 0],
+                geo_obj.np_coords[:, 1],
+                geo_obj.np_coords[:, 2],
+            )
+        ax.set_xlabel("x", fontsize=label_fontsize)
+        ax.set_ylabel("y", fontsize=label_fontsize)
+        ax.set_zlabel("z", fontsize=label_fontsize)
+        return fig, ax
 
     def intersects(self, geo_obj):
         """
-        Does current GeoLineString intersect with geo_obj?
+        Determines if the GeoLineString intersects with geo_obj
+
+        Args:
+        ----
+        geo_obj (GeoLineString): Second GeoLineString for comparision
+
+        Returns:
+        -------
+        bool: True if GeoLineStrings intersect, False otherwise
 
         """
         xy_check = self.xy.intersects(geo_obj.xy)
@@ -82,10 +157,21 @@ class GeoLineString:
 
         if all([xy_check, xz_check, yz_check]):
             return True
+        else:
+            return False
 
     def intersection(self, geo_obj, lonlat=False):
         """
-        Does current GeoLineString intersect with geo_obj?
+        Determines where the GeoLineString intersects with geo_obj
+
+        Args:
+        ----
+        geo_obj (GeoLineString): Second GeoLineString for comparision
+        lonlat (bool): Format of output coordinates. True returns the coordinates in longitude, latitude. False returns coordinates in x, y
+
+        Returns:
+        -------
+        intersection (List): Intersection coordinates
 
         """
         xy_check = self.xy.intersects(geo_obj.xy)
@@ -100,22 +186,22 @@ class GeoLineString:
             inter2 = self.xz.intersection(geo_obj.xz)
             inter3 = self.yz.intersection(geo_obj.yz)
 
-            try:
+            if not hasattr(inter1, "geoms"):
                 xy = list(inter1.coords)[0]
                 n_xy_intersections = 1
-            except:
+            else:
                 n_xy_intersections = len(inter1.geoms)
 
-            try:
+            if not hasattr(inter2, "geoms"):
                 xz = list(inter2.coords)[0]
                 n_xz_intersections = 1
-            except:
+            else:
                 n_xz_intersections = len(inter2.geoms)
 
-            try:
+            if not hasattr(inter3, "geoms"):
                 yz = list(inter3.coords)[0]
                 n_yz_intersections = 1
-            except:
+            else:
                 n_yz_intersections = len(inter3.geoms)
 
             for i in range(n_xy_intersections):
@@ -124,19 +210,19 @@ class GeoLineString:
 
                     for k in range(n_yz_intersections):
 
-                        try:
+                        if not hasattr(inter1, "geoms"):
                             xy = list(inter1.geoms[i].coords)
-                        except:
+                        else:
                             xy = list(inter1.coords)
 
-                        try:
+                        if not hasattr(inter2, "geoms"):
                             xz = list(inter2.geoms[j].coords)
-                        except:
+                        else:
                             xz = list(inter2.coords)
 
-                        try:
+                        if not hasattr(inter3, "geoms"):
                             yz = list(inter3.geoms[k].coords)
-                        except:
+                        else:
                             yz = list(inter3.coords)
 
                         for ii in range(len(xy)):
@@ -156,7 +242,12 @@ class GeoLineString:
 
             if lonlat:
                 lon, lat, alt = self.transformer.transform(
-                    intersection[:, 0], intersection[:, 1], intersection[:, 2], direction='INVERSE')
+                    intersection[:, 0],
+                    intersection[:, 1],
+                    intersection[:, 2],
+                    direction="INVERSE",
+                )
                 intersection = np.array(
-                    [[lon[i], lat[i], alt[i]] for i in range(len(lon))])
+                    [[lon[i], lat[i], alt[i]] for i in range(len(lon))]
+                )
             return intersection

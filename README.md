@@ -42,7 +42,7 @@ The core focus of this repository is to make working with 3D geospatial/geograph
 This project is very early on and is something that I am working on in my free time. Getting some of the initial functionality of GeoLineStrings like intersections and coordinate transformations was a first step, but there is a long way to go. Here I list some of the next major items that need to be addressed.
 
 * GeoLineStrings
-  1. Handling heterogeneous intersection types (LineString, Point, etc.)
+  1. Heterogeneous intersection types (LineString, Point, etc.)
   2. Add function for distance calculation
   3. Add function for GeoLineString splits
   4. Optimize intersection function for efficiency

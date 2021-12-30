@@ -43,7 +43,7 @@ This project is very early on and is something that I am working on in my free t
 
 * GeoLineStrings
   1. Heterogeneous intersection types (LineString, Point, etc.)
-  2. Add function for distance calculation
+  2. ~~Add function for distance calculation~~
   3. Add function for GeoLineString splits
   4. Optimize intersection function for efficiency
 

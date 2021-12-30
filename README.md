@@ -1,4 +1,4 @@
-# PyGeoShape
+# PyGeoShape v0.0.2
 3D extension to [shapely](https://github.com/shapely/shapely/tree/main) and [pyproj](https://github.com/pyproj4/pyproj) to make working with geospatial/trajectory data easier in python.
 
 ## Getting Started

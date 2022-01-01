@@ -1,4 +1,4 @@
-![downloads](https://img.shields.io/pypi/dm/pygeoshape) ![license](https://img.shields.io/pypi/l/pygeoshape?color=green) ![pypi](https://img.shields.io/pypi/v/pygeoshape)
+![downloads](https://img.shields.io/pypi/dm/pygeoshape) ![license](https://img.shields.io/pypi/l/pygeoshape?color=blue) ![pypi](https://img.shields.io/pypi/v/pygeoshape)
 
 # PyGeoShape v0.0.3
 3D extension to [shapely](https://github.com/shapely/shapely/tree/main) and [pyproj](https://github.com/pyproj4/pyproj) to make working with geospatial/trajectory data easier in python. If you found PyGeoShape helpful, please consider adding a star to this repository. Thanks!

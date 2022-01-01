@@ -151,11 +151,9 @@ class GeoLineString:
         bool: True if GeoLineStrings intersect, False otherwise
 
         """
-        xy_check = self.xy.intersects(geo_obj.xy)
-        xz_check = self.xz.intersects(geo_obj.xz)
-        yz_check = self.yz.intersects(geo_obj.yz)
+        intersection_points = self.intersection(geo_obj)
 
-        if all([xy_check, xz_check, yz_check]):
+        if len(intersection_points) > 0:
             return True
         else:
             return False
@@ -210,17 +208,17 @@ class GeoLineString:
 
                     for k in range(n_yz_intersections):
 
-                        if not hasattr(inter1, "geoms"):
+                        if hasattr(inter1, "geoms"):
                             xy = list(inter1.geoms[i].coords)
                         else:
                             xy = list(inter1.coords)
 
-                        if not hasattr(inter2, "geoms"):
+                        if hasattr(inter2, "geoms"):
                             xz = list(inter2.geoms[j].coords)
                         else:
                             xz = list(inter2.coords)
 
-                        if not hasattr(inter3, "geoms"):
+                        if hasattr(inter3, "geoms"):
                             yz = list(inter3.geoms[k].coords)
                         else:
                             yz = list(inter3.coords)

@@ -2,7 +2,9 @@ from typing import List
 from shapely.geometry import LineString
 from pyproj import Transformer
 import numpy as np
+import numba as nb
 import matplotlib.pyplot as plt
+from pygeoshape.utils import fast_intersection_append
 
 
 class GeoLineString:
@@ -45,18 +47,18 @@ class GeoLineString:
 
         self.np_coords = np.array(self.xy_coords)
         self.length = self.geolinestring_length()
-        dimensions = len(self.xy_coords[0])
+        self.dimensions = len(self.xy_coords[0])
 
         # need linestring for each dimension
         # x, y, [z]
         # x, z, [y]
         # y, z, [x]
 
-        if dimensions == 2:
+        if self.dimensions == 2:
             self.xy = LineString([(coord[0], coord[1])
                                  for coord in self.xy_coords])
 
-        if dimensions == 3:
+        if self.dimensions == 3:
 
             self.xy = LineString(
                 [(coord[0], coord[1], coord[2]) for coord in self.xy_coords]
@@ -144,7 +146,7 @@ class GeoLineString:
 
         Args:
         ----
-        geo_obj (GeoLineString): Second GeoLineString for comparision
+        geo_obj (GeoLineString): Second GeoLineString for comparison
 
         Returns:
         -------
@@ -164,7 +166,7 @@ class GeoLineString:
 
         Args:
         ----
-        geo_obj (GeoLineString): Second GeoLineString for comparision
+        geo_obj (GeoLineString): Second GeoLineString for comparison
         lonlat (bool): Format of output coordinates. True returns the coordinates in longitude, latitude. False returns coordinates in x, y
 
         Returns:
@@ -173,27 +175,28 @@ class GeoLineString:
 
         """
 
-        intersection = []
+        intersection = nb.typed.List.empty_list(
+            nb.types.UniTuple(nb.float64, self.dimensions))
 
         inter1 = self.xy.intersection(geo_obj.xy)
         inter2 = self.xz.intersection(geo_obj.xz)
         inter3 = self.yz.intersection(geo_obj.yz)
 
         if not hasattr(inter1, "geoms"):
-            xy = list(inter1.coords)[0]
+            xy = np.array(inter1.coords)[0]
             n_xy_intersections = 1
 
         else:
             n_xy_intersections = len(inter1.geoms)
 
         if not hasattr(inter2, "geoms"):
-            xz = list(inter2.coords)[0]
+            xz = np.array(inter2.coords)[0]
             n_xz_intersections = 1
         else:
             n_xz_intersections = len(inter2.geoms)
 
         if not hasattr(inter3, "geoms"):
-            yz = list(inter3.coords)[0]
+            yz = np.array(inter3.coords)[0]
             n_yz_intersections = 1
         else:
             n_yz_intersections = len(inter3.geoms)
@@ -205,43 +208,21 @@ class GeoLineString:
                 for k in range(n_yz_intersections):
 
                     if hasattr(inter1, "geoms"):
-                        xy = list(inter1.geoms[i].coords)
+                        xy = np.array(inter1.geoms[i].coords)
                     else:
-                        xy = list(inter1.coords)
+                        xy = np.array(inter1.coords)
 
                     if hasattr(inter2, "geoms"):
-                        xz = list(inter2.geoms[j].coords)
+                        xz = np.array(inter2.geoms[j].coords)
                     else:
-                        xz = list(inter2.coords)
+                        xz = np.array(inter2.coords)
 
                     if hasattr(inter3, "geoms"):
-                        yz = list(inter3.geoms[k].coords)
+                        yz = np.array(inter3.geoms[k].coords)
                     else:
-                        yz = list(inter3.coords)
+                        yz = np.array(inter3.coords)
 
-                    for ii in range(len(xy)):
-
-                        x, y_check, _ = xy[ii]
-
-                        xz = np.array(xz)
-                        idx = np.where(xz[:, 0] == x)[0]
-
-                        if len(idx) > 0:
-
-                            for jj in range(len(idx)):
-
-                                z = xz[idx[jj], 1]
-
-                                yz = np.array(yz)
-                                yz_idx = np.where(yz[:, 1] == z)[0]
-
-                                if len(yz_idx) > 0:
-
-                                    y = yz[yz_idx, 0]
-
-                                    if y_check in y:
-                                        intersection.append(
-                                            (x, y_check, z))
+                    fast_intersection_append(xy, xz, yz, intersection)
 
             intersection = np.unique(intersection, axis=0)
 
